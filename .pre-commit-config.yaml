@@ -28,3 +28,9 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
       # Formatter
       - id: ruff-format
+
+      # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
+  ci:
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
