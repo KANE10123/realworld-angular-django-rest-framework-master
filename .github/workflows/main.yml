@@ -1,6 +1,5 @@
 name: CI/CD Deploy
 
-# Enable Buildkit and let compose use it to speed up image building
 env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
@@ -8,7 +7,6 @@ env:
 on:
   pull_request:
     branches: ['master', 'deploy']
-
   push:
     branches: ['master', 'deploy']
 
@@ -38,13 +36,20 @@ jobs:
         working-directory: ./frontend
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install modules
-      run: yarn
-    - name: Run ESLint
-      run: yarn run eslint . --ext .js,.jsx,.ts,.tsx
-    - name: Run tests
-      run: npm run test
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+
+      - name: Run tests
+        run: npm run test
 
   django_tests:
     runs-on: ubuntu-latest
@@ -68,3 +73,20 @@ jobs:
 
       - name: Run Django Tests
         run: python manage.py test
+
+  docker_build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Images
+        run: |
+          docker-compose build
+
+      - name: Start Containers
+        run: |
+          docker-compose up -d
